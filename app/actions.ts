@@ -11,10 +11,7 @@ function normalizeVin(raw: unknown) {
 export async function createVehicle(formData: FormData) {
   const stockNumber = String(formData.get('stockNumber') || '').trim()
   const vin = normalizeVin(formData.get('vin'))
-  if (!vin) {
-    // Prevent empty VIN (unique field) from causing server crash
-    return { ok: false, message: 'VIN is required.' }
-  }
+  if (!vin) return { ok: false, message: 'VIN is required.' }
 
   const data = {
     stockNumber,
@@ -36,11 +33,9 @@ export async function createVehicle(formData: FormData) {
     await prisma.activityLog.create({
       data: { vehicleId: v.id, message: 'Vehicle created', toStatus: v.status }
     })
-    // Refresh the dashboard
     revalidatePath('/')
     return { ok: true }
   } catch (e: any) {
-    // P2002 = unique constraint violation
     if (e?.code === 'P2002' && e?.meta?.target?.includes('vin')) {
       return { ok: false, message: 'That VIN already exists in VictoryRecon.' }
     }
@@ -51,17 +46,9 @@ export async function createVehicle(formData: FormData) {
 
 export async function updateVehicleStatus(vehicleId: string, to: Status, note?: string) {
   try {
-    const prev = await prisma.vehicle.update({
-      where: { id: vehicleId },
-      data: { status: to }
-    })
+    const prev = await prisma.vehicle.update({ where: { id: vehicleId }, data: { status: to } })
     await prisma.activityLog.create({
-      data: {
-        vehicleId,
-        message: note || `Status → ${to}`,
-        fromStatus: prev.status,
-        toStatus: to
-      }
+      data: { vehicleId, message: note || `Status → ${to}`, fromStatus: prev.status, toStatus: to }
     })
     revalidatePath('/')
     revalidatePath(`/vehicles/${vehicleId}`)
@@ -74,10 +61,7 @@ export async function updateVehicleStatus(vehicleId: string, to: Status, note?: 
 
 export async function assignTech(vehicleId: string, techId: string | null) {
   try {
-    await prisma.vehicle.update({
-      where: { id: vehicleId },
-      data: { assignedTechId: techId || null }
-    })
+    await prisma.vehicle.update({ where: { id: vehicleId }, data: { assignedTechId: techId || null } })
     revalidatePath('/')
     revalidatePath(`/vehicles/${vehicleId}`)
     return { ok: true }
@@ -137,15 +121,11 @@ export async function deleteVehicle(id: string) {
   }
 }
 
-// Keep the non-upsert vendor helper (no unique constraint required)
 export async function upsertVendor(name: string, vendorType: string) {
   try {
     const existing = await prisma.vendor.findFirst({ where: { name } })
     if (existing) {
-      const v = await prisma.vendor.update({
-        where: { id: existing.id },
-        data: { vendorType }
-      })
+      const v = await prisma.vendor.update({ where: { id: existing.id }, data: { vendorType } })
       revalidatePath('/')
       return { ok: true, vendor: v }
     }
