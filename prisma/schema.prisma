@@ -3,7 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  // If you use Neon/PlanetScale Postgres, keep "postgresql".
+  // If you decide to use Turso/LibSQL, you can set provider = "sqlite" and a libsql:// URL.
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -29,29 +31,29 @@ model Vendor {
   vehicles   Vehicle[]
 }
 
-
-
 model Vehicle {
-  id          String   @id @default(cuid())
-  stockNumber String
-  vin         String   @unique
-  year        Int?
-  make        String?
-  model       String?
-  trim        String?
-  miles       Int?
-  location    Location @default(ON_LOT)
-  keysCount   Int      @default(1)
-  roNumber    String?
-  eta         DateTime?
-  status      Status   @default(INTAKE)
-  isSold      Boolean  @default(false)
+  id            String   @id @default(cuid())
+  stockNumber   String
+  vin           String   @unique
+  year          Int?
+  make          String?
+  model         String?
+  trim          String?
+  miles         Int?
+  location      Location @default(ON_LOT)
+  keysCount     Int      @default(1)
+  roNumber      String?
+  eta           DateTime?
+  status        Status   @default(INTAKE)
+  isSold        Boolean  @default(false)
+
   assignedTech   User?   @relation("TechVehicles", fields: [assignedTechId], references: [id])
   assignedTechId String?
   advisor        User?   @relation("AdvisorVehicles", fields: [advisorId], references: [id])
   advisorId      String?
   vendor         Vendor? @relation(fields: [vendorId], references: [id])
   vendorId       String?
+
   notes       String?
 
   createdAt  DateTime @default(now())
@@ -61,16 +63,16 @@ model Vehicle {
 }
 
 model ActivityLog {
-  id        String   @id @default(cuid())
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
-  vehicleId String
-  user      User?    @relation(fields: [userId], references: [id])
-  userId    String?
-  role      Role?
+  id         String   @id @default(cuid())
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId  String
+  user       User?    @relation(fields: [userId], references: [id])
+  userId     String?
+  role       Role?
   fromStatus Status?
   toStatus   Status?
-  message   String
-  createdAt DateTime @default(now())
+  message    String
+  createdAt  DateTime @default(now())
 }
 
 enum Role {
