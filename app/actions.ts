@@ -20,19 +20,30 @@ export async function createVehicle(formData: FormData) {
   }
   const v = await prisma.vehicle.create({ data })
   await prisma.activityLog.create({
-    data: { vehicleId: v.id, message: `Vehicle created`, toStatus: v.status }
+    data: { vehicleId: v.id, message: 'Vehicle created', toStatus: v.status }
   })
 }
 
 export async function updateVehicleStatus(vehicleId: string, to: Status, note?: string) {
-  const v = await prisma.vehicle.update({ where: { id: vehicleId }, data: { status: to } })
+  const updated = await prisma.vehicle.update({
+    where: { id: vehicleId },
+    data: { status: to }
+  })
   await prisma.activityLog.create({
-    data: { vehicleId, message: note || `Status → ${to}`, fromStatus: v.status, toStatus: to }
+    data: {
+      vehicleId,
+      message: note || `Status → ${to}`,
+      fromStatus: updated.status,
+      toStatus: to
+    }
   })
 }
 
 export async function assignTech(vehicleId: string, techId: string | null) {
-  await prisma.vehicle.update({ where: { id: vehicleId }, data: { assignedTechId: techId || null } })
+  await prisma.vehicle.update({
+    where: { id: vehicleId },
+    data: { assignedTechId: techId || null }
+  })
 }
 
 export async function setEta(vehicleId: string, isoDate: string) {
@@ -45,7 +56,8 @@ export async function setKeys(vehicleId: string, keysCount: number) {
 }
 
 export async function quickNote(vehicleId: string, note: string) {
-  await prisma.activityLog.create({ data: { vehicleId, message: note } })
+  if (!note.trim()) return
+  await prisma.activityLog.create({ data: { vehicleId, message: note.trim() } })
 }
 
 export async function deleteVehicle(id: string) {
@@ -59,6 +71,4 @@ export async function upsertVendor(name: string, vendorType: string) {
     update: { vendorType },
     create: { name, vendorType }
   })
-}
-
 }
