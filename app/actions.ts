@@ -66,9 +66,16 @@ export async function deleteVehicle(id: string) {
 }
 
 export async function upsertVendor(name: string, vendorType: string) {
-  return prisma.vendor.upsert({
-    where: { name },
-    update: { vendorType },
-    create: { name, vendorType }
+  // No unique constraint needed. We look up by name, then update or create.
+  const existing = await prisma.vendor.findFirst({ where: { name } })
+  if (existing) {
+    return prisma.vendor.update({
+      where: { id: existing.id },
+      data: { vendorType }
+    })
+  }
+  return prisma.vendor.create({
+    data: { name, vendorType }
   })
 }
+
