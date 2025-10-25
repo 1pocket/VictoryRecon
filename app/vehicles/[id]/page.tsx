@@ -11,7 +11,7 @@ export default async function VehicleDetail({ params }: { params: { id: string }
   })
   if (!v) return notFound()
 
-  // After notFound(), this is guaranteed non-null.
+  // Guaranteed non-null beyond this point
   const vehicleId = v.id
 
   async function setKeysAction(formData: FormData) {
