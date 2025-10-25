@@ -53,10 +53,12 @@ export async function deleteVehicle(id: string) {
   await prisma.vehicle.delete({ where: { id } })
 }
 
-export async function upsertVendor(name: string, type: string) {
+export async function upsertVendor(name: string, vendorType: string) {
   return prisma.vendor.upsert({
     where: { name },
-    update: { type },
-    create: { name, type }
+    update: { vendorType },
+    create: { name, vendorType }
   })
+}
+
 }
