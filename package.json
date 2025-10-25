@@ -1,7 +1,10 @@
 {
+  "name": "victoryrecon",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts"
