@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  role      Role
+  email     String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  vehiclesAssigned Vehicle[] @relation("TechVehicles")
+  vehiclesAdvising Vehicle[] @relation("AdvisorVehicles")
+  logs      ActivityLog[]
+}
+
+model Vendor {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   // e.g., "Detailer", "Photos"
+  contact   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  vehicles  Vehicle[]
+}
+
+model Vehicle {
+  id          String   @id @default(cuid())
+  stockNumber String
+  vin         String   @unique
+  year        Int?
+  make        String?
+  model       String?
+  trim        String?
+  miles       Int?
+  location    Location @default(ON_LOT)
+  keysCount   Int      @default(1)
+  roNumber    String?
+  eta         DateTime?
+  status      Status   @default(INTAKE)
+  isSold      Boolean  @default(false)
+  assignedTech   User?   @relation("TechVehicles", fields: [assignedTechId], references: [id])
+  assignedTechId String?
+  advisor        User?   @relation("AdvisorVehicles", fields: [advisorId], references: [id])
+  advisorId      String?
+  vendor         Vendor? @relation(fields: [vendorId], references: [id])
+  vendorId       String?
+  notes       String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  logs       ActivityLog[]
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId String
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+  role      Role?
+  fromStatus Status?
+  toStatus   Status?
+  message   String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  TECH
+  ADVISOR
+  MANAGER
+  DETAILER
+  VIEWER
+}
+
+enum Location {
+  ON_LOT
+  IN_TRANSPORT
+  AT_VENDOR
+  AT_AUCTION
+}
+
+enum Status {
+  INTAKE
+  INSPECTION
+  AWAITING_APPROVAL
+  APPROVED
+  PARTS_ORDERED
+  PARTS_BACKORDERED
+  IN_PROGRESS
+  SUBLET_DETAIL
+  SUBLET_PHOTOS
+  QUALITY_CHECK
+  READY_FOR_FRONTLINE
+  ON_FRONTLINE
+  SOLD
+}
