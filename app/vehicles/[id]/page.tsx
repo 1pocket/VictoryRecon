@@ -5,19 +5,25 @@ import StatusBadge from '@/components/StatusBadge'
 import { Status } from '@prisma/client'
 
 export default async function VehicleDetail({ params }: { params: { id: string } }) {
-  const v = await prisma.vehicle.findUnique({ where: { id: params.id }, include: { logs: { orderBy: { createdAt: 'desc' } } } })
+  const v = await prisma.vehicle.findUnique({
+    where: { id: params.id },
+    include: { logs: { orderBy: { createdAt: 'desc' } } }
+  })
   if (!v) return notFound()
+
+  // After notFound(), this is guaranteed non-null.
+  const vehicleId = v.id
 
   async function setKeysAction(formData: FormData) {
     'use server'
-    const count = Number(formData.get('keysCount') || 1)
-    await setKeys(v.id, count)
+    const count = Number(formData.get('keysCount') ?? 1)
+    await setKeys(vehicleId, count)
   }
 
   async function noteAction(formData: FormData) {
     'use server'
     const note = String(formData.get('note') || '')
-    if (note.trim()) await quickNote(v.id, note.trim())
+    if (note.trim()) await quickNote(vehicleId, note.trim())
   }
 
   return (
@@ -25,19 +31,31 @@ export default async function VehicleDetail({ params }: { params: { id: string }
       <div className="md:col-span-2 space-y-3">
         <div className="card p-4 space-y-1">
           <div className="text-sm text-gray-600">{v.stockNumber}</div>
-          <div className="text-lg font-semibold">{v.year} {v.make} {v.model} {v.trim}</div>
+          <div className="text-lg font-semibold">
+            {v.year} {v.make} {v.model} {v.trim}
+          </div>
           <div className="text-sm text-gray-600 break-all">VIN: {v.vin}</div>
-          <div className="flex items-center gap-2"><StatusBadge status={v.status} /><span className="text-xs text-gray-600">Miles: {v.miles ?? '—'}</span><span className="text-xs text-gray-600">Keys: {v.keysCount}</span></div>
-          <div className="text-sm text-gray-600">RO: {v.roNumber ?? '—'} · ETA: {v.eta ? new Date(v.eta).toLocaleDateString() : '—'}</div>
+          <div className="flex items-center gap-2">
+            <StatusBadge status={v.status} />
+            <span className="text-xs text-gray-600">Miles: {v.miles ?? '—'}</span>
+            <span className="text-xs text-gray-600">Keys: {v.keysCount}</span>
+          </div>
+          <div className="text-sm text-gray-600">
+            RO: {v.roNumber ?? '—'} · ETA: {v.eta ? new Date(v.eta).toLocaleDateString() : '—'}
+          </div>
         </div>
 
         <div className="card p-4">
           <div className="font-semibold mb-2">Update Status</div>
           <div className="flex flex-wrap gap-2">
             {[
-              'INSPECTION','AWAITING_APPROVAL','APPROVED','PARTS_ORDERED','PARTS_BACKORDERED','IN_PROGRESS','SUBLET_DETAIL','SUBLET_PHOTOS','QUALITY_CHECK','READY_FOR_FRONTLINE','ON_FRONTLINE','SOLD'
+              'INSPECTION','AWAITING_APPROVAL','APPROVED','PARTS_ORDERED','PARTS_BACKORDERED',
+              'IN_PROGRESS','SUBLET_DETAIL','SUBLET_PHOTOS','QUALITY_CHECK','READY_FOR_FRONTLINE','ON_FRONTLINE','SOLD'
             ].map((s) => (
-              <form key={s} action={async () => { 'use server'; await updateVehicleStatus(v.id, s as Status)}}>
+              <form
+                key={s}
+                action={async () => { 'use server'; await updateVehicleStatus(vehicleId, s as Status) }}
+              >
                 <button className="btn">{s.replaceAll('_',' ')}</button>
               </form>
             ))}
