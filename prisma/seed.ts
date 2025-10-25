@@ -15,9 +15,10 @@ async function main() {
     })
   ])
 
-  const detailer = await prisma.vendor.create({
-    data: { name: 'Premier Detail', type: 'Detailer', contact: 'detail@vendor.local' }
-  })
+ const detailer = await prisma.vendor.create({
+  data: { name: 'Premier Detail', vendorType: 'Detailer', contact: 'detail@vendor.local' }
+})
+
 
   await prisma.vehicle.createMany({
     data: [
