@@ -3,11 +3,22 @@ import VehicleCard from '@/components/VehicleCard'
 import QuickAddForm from '@/components/QuickAddForm'
 import { Status } from '@prisma/client'
 
+// app/page.tsx
+import { prisma } from '@/lib/prisma'
+import EditableVehicleTable from '@/components/EditableVehicleTable'
+
 export default async function Dashboard() {
   const vehicles = await prisma.vehicle.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: { assignedTech: true }
+    orderBy: { createdAt: 'desc' }
   })
+  return (
+    <div className="space-y-6">
+      <h1 className="text-xl font-semibold">VictoryRecon</h1>
+      <EditableVehicleTable initial={vehicles} />
+    </div>
+  )
+}
+
 
   const byStatus: Record<string, typeof vehicles> = {}
   for (const v of vehicles) {
